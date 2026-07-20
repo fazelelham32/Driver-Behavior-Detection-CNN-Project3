@@ -1,0 +1,27 @@
+5197.7s 1 /opt/conda/lib/python3.10/site-packages/traitlets/traitlets.py:2930: FutureWarning: --Exporter.preprocessors=["remove_papermill_header.RemovePapermillHeader"] for containers is deprecated in traitlets 5.0. You can pass `--Exporter.preprocessors item` ... multiple times to add items to a list.
+5197.7s 2 warn(
+5197.7s 3 [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+5197.7s 4 [NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+5199.3s 5 [NbConvertApp] Writing 9905607 bytes to __notebook__.ipynb
+5200.7s 6 /opt/conda/lib/python3.10/site-packages/traitlets/traitlets.py:2930: FutureWarning: --Exporter.preprocessors=["nbconvert.preprocessors.ExtractOutputPreprocessor"] for containers is deprecated in traitlets 5.0. You can pass `--Exporter.preprocessors item` ... multiple times to add items to a list.
+5200.7s 7 warn(
+5200.7s 8 [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+5200.7s 9 [NbConvertApp] Converting notebook __notebook__.ipynb to html
+5201.9s 10 [NbConvertApp] Support files will be in __results___files/
+5201.9s 11 [NbConvertApp] Making directory __results___files
+5201.9s 12 [NbConvertApp] Making directory __results___files
+5201.9s 13 [NbConvertApp] Making directory __results___files
+5201.9s 14 [NbConvertApp] Making directory __results___files
+5201.9s 15 [NbConvertApp] Making directory __results___files
+5201.9s 16 [NbConvertApp] Making directory __results___files
+5201.9s 17 [NbConvertApp] Making directory __results___files
+5201.9s 18 [NbConvertApp] Making directory __results___files
+5201.9s 19 [NbConvertApp] Making directory __results___files
+5201.9s 20 [NbConvertApp] Making directory __results___files
+5201.9s 21 [NbConvertApp] Making directory __results___files
+5201.9s 22 [NbConvertApp] Making directory __results___files
+5201.9s 23 [NbConvertApp] Making directory __results___files
+5201.9s 24 [NbConvertApp] Making directory __results___files
+5201.9s 25 [NbConvertApp] Making directory __results___files
+5201.9s 26 [NbConvertApp] Making directory __results___files
+5201.9s 27 [NbConvertApp] Writing 1998596 bytes to __results__.html
