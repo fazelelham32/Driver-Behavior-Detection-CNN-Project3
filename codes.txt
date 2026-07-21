@@ -1,0 +1,640 @@
+# Import Libraries
+import warnings
+warnings.filterwarnings("ignore")
+from numpy import asarray
+import numpy as np
+import pandas as pd
+from PIL import Image
+import cv2
+import glob
+import os 
+import random
+import subprocess
+import matplotlib.pyplot as plt
+from skimage.io import imread
+from matplotlib.patches import Rectangle
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers, models, Input, Model
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.losses import BinaryCrossentropy
+
+
+
+# Import Dataset
+image_list_other = []
+image_list_safe = []
+image_list_talking = []
+image_list_text = []
+image_list_turn = []
+
+for other in os.listdir("/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities"): 
+    if other.endswith(".png") or other.endswith(".jpg"): 
+        image_list_other.append(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities",
+                                             other))
+        print(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities", other))
+        
+for safe in os.listdir("/kaggle/input/revitsone-5class/Revitsone-5classes/safe_driving"): 
+    if safe.endswith(".png") or safe.endswith(".jpg"): 
+        image_list_safe.append(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/safe_driving", 
+                                            safe))
+        print(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/safe_driving",
+                           safe))
+        
+for talking in os.listdir("/kaggle/input/revitsone-5class/Revitsone-5classes/talking_phone"): 
+    if talking.endswith(".png") or talking.endswith(".jpg"): 
+        image_list_talking.append(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/talking_phone", 
+                                               talking))
+        print(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/talking_phone",
+                           talking))
+        
+for text in os.listdir("/kaggle/input/revitsone-5class/Revitsone-5classes/texting_phone"): 
+    if text.endswith(".png") or text.endswith(".jpg"): 
+        image_list_text.append(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/texting_phone",
+                                            text))
+        print(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/texting_phone",
+                           text))
+        
+for turn in os.listdir("/kaggle/input/revitsone-5class/Revitsone-5classes/turning"): 
+    if turn.endswith(".png") or turn.endswith(".jpg"): 
+        image_list_turn.append(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/turning",
+                                            turn))
+        print(os.path.join("/kaggle/input/revitsone-5class/Revitsone-5classes/turning", 
+                           turn))
+
+
+# Pre Modeling
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_79.jpg')
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_4664.jpg')
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_7973.jpg')
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_13318.jpg')
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_13396.jpg')
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_13541.jpg')
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_13625.jpg')
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_20398.jpg')
+image_list_other.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/other_activities/img_22266.jpg')
+
+image_list_turn.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/turning/img_8771.jpg')
+image_list_turn.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/turning/img_62337.jpg')
+image_list_turn.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/turning/img_67523.jpg')
+image_list_turn.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/turning/img_70552.jpg')
+image_list_turn.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/turning/img_84605.jpg')
+image_list_turn.remove('/kaggle/input/revitsone-5class/Revitsone-5classes/turning/img_101434.jpg')
+
+
+font = {'family':'Times New Roman','color':'#1f211f'}
+background_color = '#fab72f'
+
+
+plt.figure(1, figsize=(15, 9))
+plt.axis('off')
+n = 0
+for i in range(4):
+    
+    n += 1
+    random_img = random.choice(image_list_talking)
+    imgs = imread(random_img)
+    plt.suptitle("Random images of people who talk with their phone",
+                 fontdict = font, fontsize=25
+                 ,backgroundcolor= background_color)
+    plt.subplot(2,2,n)
+    plt.imshow(imgs)
+
+plt.show()
+
+
+
+plt.figure(1, figsize=(15, 9))
+plt.axis('off')
+n = 0
+for i in range(4):
+    
+    n += 1
+    random_img = random.choice(image_list_text)
+    imgs = imread(random_img)
+    plt.suptitle("Random images of people who text with their phone",
+                 fontdict = font, fontsize=25
+                 ,backgroundcolor=background_color)
+    plt.subplot(2,2,n)
+    plt.imshow(imgs)
+
+plt.show()
+
+
+
+
+plt.figure(1, figsize=(15, 9))
+plt.axis('off')
+n = 0
+for i in range(4):
+    
+    n += 1
+    random_img = random.choice(image_list_turn)
+    imgs = imread(random_img)
+    plt.suptitle("Random images of people who turn around",
+                 fontdict = font, fontsize=25
+                 ,backgroundcolor=background_color)
+    plt.subplot(2,2,n)
+    plt.imshow(imgs)
+
+plt.show()
+
+
+
+plt.figure(1, figsize=(15, 9))
+plt.axis('off')
+n = 0
+for i in range(4):
+    
+    n += 1
+    random_img = random.choice(image_list_safe)
+    imgs = imread(random_img)
+    plt.suptitle("Random images of people who drive safely",
+                 fontdict = font, fontsize=25
+                 ,backgroundcolor=background_color)
+    plt.subplot(2,2,n)
+    plt.imshow(imgs)
+
+plt.show()
+
+
+
+plt.figure(1, figsize=(15, 9))
+plt.axis('off')
+n = 0
+for i in range(4):
+    
+    n += 1
+    random_img = random.choice(image_list_other)
+    imgs = imread(random_img)
+    plt.suptitle("Random images of people who are in other positions",
+                 fontdict = font, fontsize=25
+                 ,backgroundcolor=background_color)
+    plt.subplot(2,2,n)
+    plt.imshow(imgs)
+
+plt.show()
+
+
+
+
+print("Number of samples in (Class = Other) = " ,len(image_list_other))
+print("Number of samples in (Class = Safe Driving) = " ,len(image_list_safe))
+print("Number of samples in (Class = Talking Phone) = " ,len(image_list_talking))
+print("Number of samples in (Class = Texting Phone) = " ,len(image_list_text))
+print("Number of samples in (Class = Turning) = " ,len(image_list_turn))
+
+
+print(.75*len(image_list_other) , .2*len(image_list_other) ,.05*len(image_list_other))
+print(.75*len(image_list_safe) , .2*len(image_list_safe) ,.05*len(image_list_safe))
+print(.75*len(image_list_talking) , .2*len(image_list_talking) ,.05*len(image_list_talking))
+print(.75*len(image_list_text) , .2*len(image_list_text) ,.05*len(image_list_text))
+print(.75*len(image_list_turn) , .2*len(image_list_turn) ,.05*len(image_list_turn))
+
+
+
+print("Train","Test", "Valid")
+
+train_other = image_list_other[:1589]
+test_other = image_list_other[1589:2012]
+valid_other = image_list_other[2012:]
+
+print (len(train_other), len(test_other), len(valid_other))
+
+train_safe = image_list_safe[:1652]
+test_safe = image_list_safe[1652:2092]
+valid_safe = image_list_safe[2092:]
+
+print (len(train_safe), len(test_safe), len(valid_safe))
+
+train_talking = image_list_talking[:1626]
+test_talking = image_list_talking[1626:2059]
+valid_talking = image_list_talking[2059:]
+
+print (len(train_talking), len(test_talking), len(valid_talking))
+
+train_text = image_list_text[:1652]
+test_text = image_list_text[1652:2092]
+valid_text = image_list_text[2092:]
+
+print (len(train_text), len(test_text), len(valid_text))
+
+train_turn = image_list_turn[:1547]
+test_turn = image_list_turn[1547:1959]
+valid_turn = image_list_turn[1959:]
+
+print (len(train_turn), len(test_turn), len(valid_turn))
+
+
+train_other_df = pd.DataFrame({'image':train_other, 'label':'Other'})
+train_safe_df = pd.DataFrame({'image':train_safe, 'label':'Safe'})
+train_talking_df = pd.DataFrame({'image':train_talking, 'label':'Talk'})
+train_text_df = pd.DataFrame({'image':train_text, 'label':'Text'})
+train_turn_df = pd.DataFrame({'image':train_turn, 'label':'Turn'})
+
+
+test_other_df = pd.DataFrame({'image':test_other, 'label':'Other'})
+test_safe_df = pd.DataFrame({'image':test_safe, 'label':'Safe'})
+test_talking_df = pd.DataFrame({'image':test_talking, 'label':'Talk'})
+test_text_df = pd.DataFrame({'image':test_text, 'label':'Text'})
+test_turn_df = pd.DataFrame({'image':test_turn, 'label':'Turn'})
+
+
+valid_other_df = pd.DataFrame({'image':valid_other, 'label':'Other'})
+valid_safe_df = pd.DataFrame({'image':valid_safe, 'label':'Safe'})
+valid_talking_df = pd.DataFrame({'image':valid_talking, 'label':'Talk'})
+valid_text_df = pd.DataFrame({'image':valid_text, 'label':'Text'})
+valid_turn_df = pd.DataFrame({'image':valid_turn, 'label':'Turn'})
+
+
+train_df = pd.concat([train_other_df, train_safe_df, train_talking_df, train_text_df, train_turn_df])
+test_df = pd.concat([test_other_df, test_safe_df, test_talking_df, test_text_df, test_turn_df])
+val_df = pd.concat([valid_other_df, valid_safe_df, valid_talking_df, valid_text_df, valid_turn_df])
+
+
+train_df.head()
+print("Number of rows in train dataframe is: ", len(train_df))
+print("Number of rows in test dataframe is: ", len(test_df))
+print("Number of rows in val dataframe is: ", len(val_df))
+
+random_img_height = random.choice(train_other)
+image= cv2.imread(random_img_height)
+​
+height, width= image.shape[:2]
+​
+print("The height is ", height)
+​
+print("The width is ", width)
+
+
+Batch_size = 64
+Img_height = 240
+Img_width = 240
+
+
+trainGenerator = ImageDataGenerator(rescale=1./255.)
+valGenerator = ImageDataGenerator(rescale=1./255.)
+testGenerator = ImageDataGenerator(rescale=1./255.)
+
+
+
+
+trainDataset = trainGenerator.flow_from_dataframe(
+  dataframe=train_df,
+  class_mode="categorical",
+  x_col="image",
+  y_col="label",
+  batch_size=Batch_size,
+  seed=42,
+  shuffle=True,
+  target_size=(Img_height,Img_width) #set the height and width of the images
+)
+
+testDataset = testGenerator.flow_from_dataframe(
+  dataframe=test_df,
+  class_mode='categorical',
+  x_col="image",
+  y_col="label",
+  batch_size=Batch_size,
+  seed=42,
+  shuffle=True,
+  target_size=(Img_height,Img_width)
+)
+
+valDataset = valGenerator.flow_from_dataframe(
+  dataframe=val_df,
+  class_mode='categorical',
+  x_col="image",
+  y_col="label",
+  batch_size=Batch_size,
+  seed=42,
+  shuffle=True,
+  target_size=(Img_height,Img_width)
+)
+
+
+# AlexNet
+def AlexNet():
+    inp = layers.Input((240, 240, 3))
+    x = layers.Conv2D(96, 11, 4, activation='relu')(inp)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D(3, 2)(x)
+    x = layers.Conv2D(256, 5, 1, activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D(3, 2)(x)
+    x = layers.Conv2D(384, 3, 1, activation='relu')(x)
+    x = layers.Conv2D(384, 3, 1, activation='relu')(x)
+    x = layers.Conv2D(256, 3, 1, activation='relu')(x)
+    x = layers.MaxPooling2D(3, 2)(x)
+    x = layers.Flatten()(x)
+    x = layers.Dense(4096, activation='relu')(x)
+    x = layers.Dropout(0.5)(x)
+    x = layers.Dense(4096, activation='relu')(x)
+    x = layers.Dropout(0.5)(x)
+    x = layers.Dense(5, activation='softmax')(x)
+
+    model_Alex = models.Model(inputs=inp, outputs=x)
+
+    return model_Alex
+
+model_Alex = AlexNet()
+model_Alex.summary()
+
+
+
+
+tf.keras.utils.plot_model(
+    model_Alex,
+    to_file='alex_model.png',
+    show_shapes=True,
+    show_dtype=False,
+    show_layer_names=True,
+    show_layer_activations=True,
+    dpi=100
+)
+
+model_Alex.compile(loss=BinaryCrossentropy(),
+              optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+
+
+
+Alex_model = model_Alex.fit(trainDataset, epochs=20, validation_data=valDataset)
+
+training_loss_alex = Alex_model.history['loss']
+val_loss_alex = Alex_model.history['val_loss']
+training_acc_alex = Alex_model.history['accuracy']
+val_acc_alex = Alex_model.history['val_accuracy']
+
+
+
+epoch_count = range(1, len(training_loss_alex) + 1)
+
+# Visualize loss history
+plt.figure(figsize=(10,5), dpi=200)
+plt.plot(epoch_count, training_loss_alex, 'r--', color= 'navy')
+plt.plot(epoch_count, val_loss_alex, '--bo',color= 'orangered', linewidth = '2.5', label='line with marker')
+plt.legend(['Training Loss', 'Val Loss'])
+plt.title('Number of epochs & Loss in ALEXNET')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.xticks(np.arange(1,21,1))
+plt.show();
+
+
+
+plt.figure(figsize=(10,5), dpi=200)
+plt.plot(epoch_count, training_acc_alex, 'r--', color= 'navy')
+plt.plot(epoch_count, val_acc_alex, '--bo',color= 'orangered', linewidth = '2.5', label='line with marker')
+plt.legend(['Training Acc', 'Val Acc'])
+plt.title('Number of epochs & Accuracy in ALEXNET')
+plt.xlabel('Epoch')
+plt.ylabel('Acc')
+plt.xticks(np.arange(1,21,1))
+plt.plot();
+plt.show();
+
+
+
+# VGGNet
+def VGGNet():
+    inp = layers.Input((240, 240, 3))
+    x = layers.Conv2D(64, 3, 1, activation='relu')(inp)
+    x = layers.Conv2D(64, 3, 1, activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D(2, 2)(x)
+    x = layers.Conv2D(128, 3, 1, activation='relu')(x)
+    x = layers.Conv2D(128, 3, 1, activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D(2, 2)(x)
+    x = layers.Conv2D(256, 3, 1, activation='relu')(x)
+    x = layers.Conv2D(256, 3, 1, activation='relu')(x)
+    x = layers.Conv2D(256, 3, 1, activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.MaxPooling2D(2, 2)(x)
+    x = layers.Conv2D(512, 3, 1, activation='relu')(x)
+    x = layers.Conv2D(512, 3, 1, activation='relu')(x)
+    x = layers.Conv2D(512, 3, 1, activation='relu')(x)
+    x = layers.MaxPooling2D(2, 2)(x)
+    x = layers.Flatten()(x)
+    x = layers.Dense(4096, activation='relu')(x)
+    x = layers.Dropout(0.5)(x)
+    x = layers.Dense(4096, activation='relu')(x)
+    x = layers.Dropout(0.5)(x)
+    x = layers.Dense(5, activation='softmax')(x)
+
+    model_VGG = models.Model(inputs=inp, outputs=x)
+
+    return model_VGG
+
+model_VGG = VGGNet()
+model_VGG.summary()
+
+
+
+tf.keras.utils.plot_model(
+    model_VGG,
+    to_file='vgg_model.png',
+    show_shapes=True,
+    show_dtype=False,
+    show_layer_names=True,
+    show_layer_activations=True,
+    dpi=100
+)
+
+
+model_VGG.compile(loss=BinaryCrossentropy(),
+              optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+
+VGG_model = model_VGG.fit(trainDataset, epochs=20, validation_data=valDataset)
+
+training_loss_vgg = VGG_model.history['loss']
+val_loss_vgg = VGG_model.history['val_loss']
+training_acc_vgg = VGG_model.history['accuracy']
+val_acc_vgg = VGG_model.history['val_accuracy']
+
+
+
+plt.figure(figsize=(10,5), dpi=200)
+plt.plot(epoch_count, training_loss_vgg, 'r--', color= 'navy')
+plt.plot(epoch_count, val_loss_vgg, '--bo',color= 'orangered', linewidth = '2.5', label='line with marker')
+plt.legend(['Training Loss', 'Val Loss'])
+plt.title('Number of epochs & Loss in VGGNET')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.xticks(np.arange(1,21,1))
+plt.show();
+
+
+
+
+plt.figure(figsize=(10,5), dpi=200)
+plt.plot(epoch_count, training_acc_vgg, 'r--', color= 'navy')
+plt.plot(epoch_count, val_acc_vgg, '--bo',color= 'orangered', linewidth = '2.5', label='line with marker')
+plt.legend(['Training Acc', 'Val Acc'])
+plt.title('Number of epochs & Accuracy in VGGNET')
+plt.xlabel('Epoch')
+plt.ylabel('Acc')
+plt.xticks(np.arange(1,21,1))
+plt.plot();
+plt.show();
+
+
+
+
+#ResNet
+def ResNet34 ():
+    inp = layers.Input((240, 240, 3))
+    x = layers.Conv2D(64, 7, 2,padding='valid', activation='relu')(inp)
+    x = layers.MaxPooling2D(strides=2, padding='same')(x)
+    x = layers.Conv2D(64, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(64, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(64, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(64, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    
+    
+    x = layers.Conv2D(128, 3, 2,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(128, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(128, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(128, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+     
+        
+    x = layers.Conv2D(256, 3, 2,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(256, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(256, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(256, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(256, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(256, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    
+    
+    
+    x = layers.Conv2D(512, 3, 2,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(512, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Conv2D(512, 3, 1,padding='same', activation='relu')(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Flatten()(x)
+    x = layers.Dense(4096, activation='relu')(x)
+    x = layers.Dropout(0.5)(x)
+    x = layers.Dense(4096, activation='relu')(x)
+    x = layers.Dropout(0.5)(x)
+    x = layers.Dense(5, activation='softmax')(x)
+
+    
+    
+    
+    
+    model_Res = models.Model(inputs=inp, outputs=x)
+
+    return model_Res
+
+model_Res = ResNet34()
+model_Res.summary()
+
+
+
+
+
+
+
+tf.keras.utils.plot_model(
+    model_Res,
+    to_file='res_model.png',
+    show_shapes=True,
+    show_dtype=False,
+    show_layer_names=True,
+    show_layer_activations=True,
+    dpi=100
+)
+
+
+model_Res.compile(loss=BinaryCrossentropy(),
+              optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+
+
+RES_model = model_Res.fit(trainDataset, epochs=20, validation_data=valDataset)
+
+
+
+training_loss_res = RES_model.history['loss']
+val_loss_res = RES_model.history['val_loss']
+training_acc_res = RES_model.history['accuracy']
+val_acc_res = RES_model.history['val_accuracy']
+
+
+
+plt.figure(figsize=(10,5), dpi=200)
+plt.plot(epoch_count, training_loss_res, 'r--', color= 'navy')
+plt.plot(epoch_count, val_loss_res, '--bo',color= 'orangered', linewidth = '2.5', label='line with marker')
+plt.legend(['Training Loss', 'Val Loss'])
+plt.title('Number of epochs & Loss in RESNET34')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.xticks(np.arange(1,21,1))
+plt.show();
+
+
+
+plt.figure(figsize=(10,5), dpi=200)
+plt.plot(epoch_count, training_acc_res, 'r--', color= 'navy')
+plt.plot(epoch_count, val_acc_res, '--bo',color= 'orangered', linewidth = '2.5', label='line with marker')
+plt.legend(['Training Acc', 'Val Acc'])
+plt.title('Number of epochs & Accuracy in RESNET34')
+plt.xlabel('Epoch')
+plt.ylabel('Acc')
+plt.xticks(np.arange(1,21,1))
+plt.plot();
+plt.show();
+
+
+
+# Result
+plt.figure(figsize=(10,5), dpi=200)
+
+plt.plot(epoch_count, val_loss_alex, '--bo',color= 'navy',
+         linewidth = '2.5', label='line with marker')
+plt.plot(epoch_count, val_loss_vgg, '--bo',color= 'orangered',
+         linewidth = '2.5', label='line with marker')
+plt.plot(epoch_count, val_loss_res, '--bo',color= 'black',
+         linewidth = '2.5', label='line with marker')
+plt.legend(['AlexNet', 'VGGNet','ResNet'])
+plt.title('Number of epochs & Loss in All Models')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.xticks(np.arange(1,21,1))
+plt.show();
+
+
+
+plt.figure(figsize=(10,5), dpi=200)
+
+plt.plot(epoch_count, val_acc_alex, '--bo',color= 'navy',
+         linewidth = '2.5', label='line with marker')
+plt.plot(epoch_count, val_acc_vgg, '--bo',color= 'orangered',
+         linewidth = '2.5', label='line with marker')
+plt.plot(epoch_count, val_acc_res, '--bo',color= 'black',
+         linewidth = '2.5', label='line with marker')
+plt.legend(['AlexNet', 'VGGNet','ResNet'])
+plt.title('Number of epochs & Accuracy in All Models')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.xticks(np.arange(1,21,1))
+plt.show();
+
+
+
